@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Навчальний Центр | Glusco</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        .tap-highlight-transparent { -webkit-tap-highlight-color: transparent; }
+        /* Анімація для кнопок */
+        .btn-active:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex justify-center pb-10">
+
+    <div class="w-full max-w-md bg-white shadow-xl min-h-screen relative flex flex-col">
+        
+        <div class="w-full h-44 bg-gradient-to-br from-green-600 to-green-800 flex items-center justify-center relative overflow-hidden shadow-inner">
+            <div class="absolute inset-0 opacity-10">
+                <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="diagonal-stripes" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                            <line x1="0" y1="0" x2="0" y2="40" stroke="white" stroke-width="10" />
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#diagonal-stripes)" />
+                </svg>
+            </div>
+            <div class="z-10 text-center">
+                <h1 class="text-white text-3xl font-black tracking-tight drop-shadow-lg">GLUSCO</h1>
+                <p class="text-green-100 text-sm font-medium mt-1 uppercase tracking-widest">Навчальний центр</p>
+            </div>
+        </div>
+
+        <div class="p-4 bg-white border-b border-gray-100">
+            <div class="flex items-center space-x-3 mb-3">
+                <span class="text-2xl">📌</span>
+                <h2 class="text-lg font-bold text-gray-800">Список активних курсів</h2>
+            </div>
+            <div class="text-xs text-gray-500 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-200 italic">
+                Якщо курс не з'явився у списку — натисніть кнопку "Оновити". Завершені курси автоматично переносяться в архів.
+            </div>
+        </div>
+
+        <div class="px-4 py-3 grid grid-cols-2 gap-2 bg-white sticky top-0 z-20 shadow-sm">
+            <button onclick="refreshPage()" class="col-span-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md btn-active transition-all flex justify-center items-center">
+                <span class="mr-2">🔄</span> ОНОВИТИ СПИСОК
+            </button>
+            <button class="bg-stone-700 hover:bg-stone-800 text-white font-bold py-3 rounded-xl shadow-md btn-active transition-all flex justify-center items-center text-sm">
+                <span class="mr-2">🗄️</span> АРХІВ
+            </button>
+            <button class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl shadow-md btn-active transition-all flex justify-center items-center text-sm">
+                <span class="mr-2">☎️</span> ПІДТРИМКА
+            </button>
+        </div>
+
+        <div class="p-4 flex-grow">
+            <div class="flex items-center mb-4">
+                <span class="relative flex h-3 w-3 mr-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                <h3 class="font-bold text-gray-700 uppercase text-xs tracking-widest">Доступно для вивчення</h3>
+            </div>
+
+            <div class="space-y-3">
+                
+                <a href="https://t.me/lkdechbhnjmrfvbyhnjnfbhbsbgjkshj/43" target="_blank" class="block bg-white border-2 border-green-500 rounded-2xl p-4 hover:bg-green-50 transition-colors shadow-sm btn-active">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white mr-3 shadow-md">✅</div>
+                            <div>
+                                <p class="text-[10px] text-green-600 font-bold uppercase">Матеріал</p>
+                                <p class="font-bold text-gray-800">Врап з курячою грудкою</p>
+                            </div>
+                        </div>
+                        <span class="text-green-500">➜</span>
+                    </div>
+                </a>
+
+                <a href="https://tg.pulse.is/kfjhbybhdjljcsoijtytkokjnbbvsbot?start=69f8bbf8905666cc72039392&Glusco - ПІБ=value1&Glusko№АЗК=value2" target="_blank" class="block bg-white border-2 border-orange-400 rounded-2xl p-4 hover:bg-orange-50 transition-colors shadow-sm btn-active">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white mr-3 shadow-md">✅</div>
+                            <div>
+                                <p class="text-[10px] text-orange-500 font-bold uppercase">Матеріал</p>
+                                <p class="font-bold text-gray-800">Круасан з шинкою</p>
+                            </div>
+                        </div>
+                        <span class="text-orange-400">➜</span>
+                    </div>
+                </a>
+
+                <a href="#" class="block bg-white border-2 border-teal-500 rounded-2xl p-4 hover:bg-teal-50 transition-colors shadow-sm btn-active opacity-60">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-white mr-3">⏳</div>
+                            <div>
+                                <p class="text-[10px] text-teal-600 font-bold uppercase">Очікується</p>
+                                <p class="font-bold text-gray-800">Телера сендвіч</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+
+        <div class="text-center p-6">
+            <p class="text-[10px] text-gray-400 font-medium tracking-tighter uppercase">Система управління навчанням v2.0</p>
+        </div>
+        
+    </div>
+
+    <script>
+        function refreshPage() {
+            const btn = document.querySelector('button[onclick="refreshPage()"]');
+            btn.innerHTML = '⌛ ПЕРЕВІРКА...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                location.reload();
+            }, 600);
+        }
+    </script>
+</body>
+</html>
