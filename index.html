@@ -2,126 +2,217 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Навчальний Центр | Glusco</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Glusco Safety Simulator: Прийом ПММ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        .tap-highlight-transparent { -webkit-tap-highlight-color: transparent; }
-        /* Анімація для кнопок */
-        .btn-active:active { transform: scale(0.95); }
+        body { margin: 0; background-color: #0f172a; touch-action: manipulation; font-family: 'Segoe UI', sans-serif; color: #f8fafc; overflow: hidden; }
+        .btn-action { transition: all 0.1s; user-select: none; }
+        .btn-action:active { transform: scale(0.95); }
+        .log-container::-webkit-scrollbar { width: 4px; }
+        .log-container::-webkit-scrollbar-thumb { background: #475569; }
+        
+        /* Анімація мигалки для аварії */
+        @keyframes emergencyFlash {
+            0%, 100% { background-color: #7f1d1d; }
+            50% { background-color: #dc2626; }
+        }
+        .emergency-mode { animation: emergencyFlash 0.5s infinite; }
+        
+        .scanline {
+            width: 100%; height: 100px; z-index: 50; position: absolute; pointer-events: none;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(34,197,94,0.2) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1; animation: scanline 6s linear infinite;
+        }
+        @keyframes scanline { 0% { top: -100px; } 100% { top: 100%; } }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex justify-center pb-10">
+<body class="flex flex-col h-screen relative" id="game-body">
+    <div class="scanline"></div>
 
-    <div class="w-full max-w-md bg-white shadow-xl min-h-screen relative flex flex-col">
+    <header class="bg-slate-900 border-b border-slate-700 p-3 flex justify-between items-center z-10 shadow-md">
+        <div>
+            <h1 class="text-xl font-black tracking-widest text-green-500 uppercase">GLUSCO: Термінал</h1>
+            <p class="text-xs text-slate-400">Протокол безпеки прийому ПММ</p>
+        </div>
+        <div class="text-right">
+            <span id="status-badge" class="bg-yellow-500/20 text-yellow-500 px-3 py-1 rounded text-xs font-bold border border-yellow-500/50">
+                ОЧІКУВАННЯ ТРАНСПОРТУ
+            </span>
+        </div>
+    </header>
+
+    <main class="flex-1 p-4 flex flex-col gap-4 overflow-hidden z-10">
         
-        <div class="w-full h-44 bg-gradient-to-br from-green-600 to-green-800 flex items-center justify-center relative overflow-hidden shadow-inner">
-            <div class="absolute inset-0 opacity-10">
-                <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <pattern id="diagonal-stripes" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                            <line x1="0" y1="0" x2="0" y2="40" stroke="white" stroke-width="10" />
-                        </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#diagonal-stripes)" />
-                </svg>
-            </div>
-            <div class="z-10 text-center">
-                <h1 class="text-white text-3xl font-black tracking-tight drop-shadow-lg">GLUSCO</h1>
-                <p class="text-green-100 text-sm font-medium mt-1 uppercase tracking-widest">Навчальний центр</p>
-            </div>
+        <div class="bg-slate-800 rounded-lg p-4 border border-slate-600 shadow-inner flex-shrink-0">
+            <h2 class="text-sm font-bold text-slate-400 mb-1 uppercase">Ввідна ситуація:</h2>
+            <p id="scenario-text" class="text-lg font-mono text-green-400">На АЗК прибув бензовоз з пальним А-95. Здійсніть правильну процедуру прийому.</p>
         </div>
 
-        <div class="p-4 bg-white border-b border-gray-100">
-            <div class="flex items-center space-x-3 mb-3">
-                <span class="text-2xl">📌</span>
-                <h2 class="text-lg font-bold text-gray-800">Список активних курсів</h2>
-            </div>
-            <div class="text-xs text-gray-500 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-200 italic">
-                Якщо курс не з'явився у списку — натисніть кнопку "Оновити". Завершені курси автоматично переносяться в архів.
-            </div>
+        <div class="flex-1 bg-black rounded-lg border border-slate-700 p-3 font-mono text-sm overflow-y-auto log-container flex flex-col-reverse" id="action-log">
+            <div class="text-slate-500">> Система ініціалізована. Чекаю на ваші дії...</div>
         </div>
+    </main>
 
-        <div class="px-4 py-3 grid grid-cols-2 gap-2 bg-white sticky top-0 z-20 shadow-sm">
-            <button onclick="refreshPage()" class="col-span-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md btn-active transition-all flex justify-center items-center">
-                <span class="mr-2">🔄</span> ОНОВИТИ СПИСОК
+    <footer class="bg-slate-900 p-3 border-t border-slate-700 z-10 pb-6">
+        <h3 class="text-xs text-slate-500 uppercase mb-2 font-bold tracking-widest text-center">Доступні дії (Оберіть правильну послідовність)</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2" id="controls">
+            <button onclick="performAction('docs')" class="btn-action bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded p-3 flex items-center gap-3">
+                <span class="text-2xl">📄</span> <span class="text-sm font-bold text-left leading-tight">Перевірити ТТН та паспорт</span>
             </button>
-            <button class="bg-stone-700 hover:bg-stone-800 text-white font-bold py-3 rounded-xl shadow-md btn-active transition-all flex justify-center items-center text-sm">
-                <span class="mr-2">🗄️</span> АРХІВ
+            <button onclick="performAction('ground')" class="btn-action bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded p-3 flex items-center gap-3">
+                <span class="text-2xl">⚡</span> <span class="text-sm font-bold text-left leading-tight">Підключити заземлення</span>
             </button>
-            <button class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl shadow-md btn-active transition-all flex justify-center items-center text-sm">
-                <span class="mr-2">☎️</span> ПІДТРИМКА
+            <button onclick="performAction('fire_ext')" class="btn-action bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded p-3 flex items-center gap-3">
+                <span class="text-2xl">🧯</span> <span class="text-sm font-bold text-left leading-tight">Підготувати вогнегасник</span>
+            </button>
+            <button onclick="performAction('seals')" class="btn-action bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded p-3 flex items-center gap-3">
+                <span class="text-2xl">🔒</span> <span class="text-sm font-bold text-left leading-tight">Перевірити пломби</span>
+            </button>
+            <button onclick="performAction('measure')" class="btn-action bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded p-3 flex items-center gap-3">
+                <span class="text-2xl">🌡️</span> <span class="text-sm font-bold text-left leading-tight">Заміряти рівень (Метрошток)</span>
+            </button>
+            <button onclick="performAction('hose')" class="btn-action bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded p-3 flex items-center gap-3">
+                <span class="text-2xl">🚰</span> <span class="text-sm font-bold text-left leading-tight">Підключити зливний рукав</span>
             </button>
         </div>
+    </footer>
 
-        <div class="p-4 flex-grow">
-            <div class="flex items-center mb-4">
-                <span class="relative flex h-3 w-3 mr-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                </span>
-                <h3 class="font-bold text-gray-700 uppercase text-xs tracking-widest">Доступно для вивчення</h3>
-            </div>
-
-            <div class="space-y-3">
-                
-                <a href="https://t.me/lkdechbhnjmrfvbyhnjnfbhbsbgjkshj/43" target="_blank" class="block bg-white border-2 border-green-500 rounded-2xl p-4 hover:bg-green-50 transition-colors shadow-sm btn-active">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white mr-3 shadow-md">✅</div>
-                            <div>
-                                <p class="text-[10px] text-green-600 font-bold uppercase">Матеріал</p>
-                                <p class="font-bold text-gray-800">Врап з курячою грудкою</p>
-                            </div>
-                        </div>
-                        <span class="text-green-500">➜</span>
-                    </div>
-                </a>
-
-                <a href="https://tg.pulse.is/kfjhbybhdjljcsoijtytkokjnbbvsbot?start=69f8bbf8905666cc72039392&Glusco - ПІБ=value1&Glusko№АЗК=value2" target="_blank" class="block bg-white border-2 border-orange-400 rounded-2xl p-4 hover:bg-orange-50 transition-colors shadow-sm btn-active">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white mr-3 shadow-md">✅</div>
-                            <div>
-                                <p class="text-[10px] text-orange-500 font-bold uppercase">Матеріал</p>
-                                <p class="font-bold text-gray-800">Круасан з шинкою</p>
-                            </div>
-                        </div>
-                        <span class="text-orange-400">➜</span>
-                    </div>
-                </a>
-
-                <a href="#" class="block bg-white border-2 border-teal-500 rounded-2xl p-4 hover:bg-teal-50 transition-colors shadow-sm btn-active opacity-60">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-white mr-3">⏳</div>
-                            <div>
-                                <p class="text-[10px] text-teal-600 font-bold uppercase">Очікується</p>
-                                <p class="font-bold text-gray-800">Телера сендвіч</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-
-            </div>
-        </div>
-
-        <div class="text-center p-6">
-            <p class="text-[10px] text-gray-400 font-medium tracking-tighter uppercase">Система управління навчанням v2.0</p>
-        </div>
-        
+    <div id="overlay" class="absolute inset-0 bg-slate-900/95 z-50 hidden flex flex-col justify-center items-center text-center p-6 backdrop-blur-md">
+        <div id="overlay-icon" class="text-6xl mb-4">💥</div>
+        <h1 id="overlay-title" class="text-4xl font-black mb-2 uppercase text-red-500">КРИТИЧНА ПОМИЛКА</h1>
+        <p id="overlay-msg" class="text-slate-300 text-lg mb-8 max-w-md">Ви спробували відкрити люк до заземлення автомобіля. Виникла статична іскра. Зімітовано загоряння.</p>
+        <button onclick="resetGame()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded shadow-lg transition">ПОЧАТИ ЗАНОВО</button>
     </div>
 
     <script>
-        function refreshPage() {
-            const btn = document.querySelector('button[onclick="refreshPage()"]');
-            btn.innerHTML = '⌛ ПЕРЕВІРКА...';
-            btn.disabled = true;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTone(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now);
+                gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
+            } else if (type === 'success') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now); osc.frequency.setValueAtTime(600, now + 0.1); osc.frequency.setValueAtTime(1000, now + 0.2);
+                gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0, now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
+            } else if (type === 'boom') {
+                osc.type = 'square'; osc.frequency.setValueAtTime(50, now);
+                gain.gain.setValueAtTime(1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 1);
+                osc.start(now); osc.stop(now + 1);
+            }
+        }
+
+        // ПРАВИЛЬНА ПОСЛІДОВНІСТЬ ДІЙ
+        const correctSequence = ['docs', 'ground', 'fire_ext', 'seals', 'measure', 'hose'];
+        
+        // Опис дій для журналу
+        const actionDetails = {
+            'docs': { text: "Перевірено ТТН та паспорт якості. Дані збігаються.", isHazardous: false },
+            'ground': { text: "Автопоїзд успішно заземлено. Статична напруга знята.", isHazardous: false },
+            'fire_ext': { text: "Первинні засоби пожежогасіння підготовлені.", isHazardous: false },
+            'seals': { text: "Пломби перевірені та зняті. Доступ до люків відкрито.", isHazardous: true },
+            'measure': { text: "Проведено заміри метроштоком. Густина в нормі.", isHazardous: true },
+            'hose': { text: "Зливний рукав підключено до резервуара А-95.", isHazardous: true }
+        };
+
+        let currentStepIndex = 0;
+        let isGrounded = false;
+        let gameActive = true;
+
+        function logMessage(msg, type = 'info') {
+            const logBox = document.getElementById('action-log');
+            const color = type === 'error' ? 'text-red-500' : (type === 'success' ? 'text-green-400' : 'text-blue-300');
+            const time = new Date().toLocaleTimeString('uk-UA', { hour12: false });
+            logBox.insertAdjacentHTML('afterbegin', `<div class="${color} mb-1">[${time}] > ${msg}</div>`);
+        }
+
+        function triggerFatalError(reason) {
+            gameActive = false;
+            playTone('boom');
+            document.getElementById('game-body').classList.add('emergency-mode');
             
             setTimeout(() => {
-                location.reload();
-            }, 600);
+                const overlay = document.getElementById('overlay');
+                overlay.classList.remove('hidden');
+                document.getElementById('overlay-title').innerText = "КРИТИЧНА ПОМИЛКА";
+                document.getElementById('overlay-title').classList.replace('text-green-400', 'text-red-500');
+                document.getElementById('overlay-icon').innerText = "💥";
+                document.getElementById('overlay-msg').innerText = reason;
+                document.getElementById('status-badge').className = "bg-red-500/20 text-red-500 px-3 py-1 rounded text-xs font-bold border border-red-500/50";
+                document.getElementById('status-badge').innerText = "АВАРІЯ";
+            }, 500);
+        }
+
+        function triggerSuccess() {
+            gameActive = false;
+            playTone('success');
+            setTimeout(() => {
+                const overlay = document.getElementById('overlay');
+                overlay.classList.remove('hidden');
+                document.getElementById('overlay-title').innerText = "ПРИЙОМ ДОЗВОЛЕНО";
+                document.getElementById('overlay-title').classList.replace('text-red-500', 'text-green-400');
+                document.getElementById('overlay-icon').innerText = "✅";
+                document.getElementById('overlay-msg').innerText = "Усі процедури безпеки виконані бездоганно. Злив пального розпочато.";
+                document.getElementById('status-badge').className = "bg-green-500/20 text-green-500 px-3 py-1 rounded text-xs font-bold border border-green-500/50";
+                document.getElementById('status-badge').innerText = "ПРОЦЕС ЗЛИВУ";
+            }, 500);
+        }
+
+        function performAction(actionId) {
+            if (!gameActive) return;
+            playTone('click');
+
+            const actionDef = actionDetails[actionId];
+            
+            // ЛОГІКА КРИТИЧНИХ ПОМИЛОК (Безпека понад усе)
+            if (actionId === 'ground') isGrounded = true;
+
+            // Якщо дія небезпечна (відкриття люків, шланги), а заземлення немає!
+            if (actionDef.isHazardous && !isGrounded) {
+                logMessage(`СПРОБА: ${actionDef.text}`, 'error');
+                triggerFatalError("Ви почали взаємодію з резервуарами (відкриття люків або підключення рукавів) ДО підключення заземлення. Виникла статична іскра, що призвела до загоряння парів пального.");
+                return;
+            }
+
+            // ЛОГІКА ПОСЛІДОВНОСТІ
+            if (actionId === correctSequence[currentStepIndex]) {
+                // Правильна дія
+                logMessage(actionDef.text, 'success');
+                currentStepIndex++;
+                
+                if (currentStepIndex === correctSequence.length) {
+                    triggerSuccess();
+                }
+            } else {
+                // Порушення інструкції (Не смертельно, але помилка)
+                playTone('error');
+                logMessage(`Порушення регламенту: Дія "${actionDef.text.split('.')[0]}" виконана невчасно.`, 'error');
+                triggerFatalError(`Ви порушили затверджену послідовність. На цьому етапі ви мали виконати іншу дію. Згідно з регламентом, інструктаж провалено.`);
+            }
+        }
+
+        function resetGame() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            document.getElementById('overlay').classList.add('hidden');
+            document.getElementById('game-body').classList.remove('emergency-mode');
+            document.getElementById('action-log').innerHTML = '<div class="text-slate-500">> Система ініціалізована. Чекаю на ваші дії...</div>';
+            document.getElementById('status-badge').className = "bg-yellow-500/20 text-yellow-500 px-3 py-1 rounded text-xs font-bold border border-yellow-500/50";
+            document.getElementById('status-badge').innerText = "ОЧІКУВАННЯ ТРАНСПОРТУ";
+            currentStepIndex = 0;
+            isGrounded = false;
+            gameActive = true;
         }
     </script>
 </body>
